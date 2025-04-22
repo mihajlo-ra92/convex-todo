@@ -31,7 +31,7 @@ export function MobileMenu() {
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full px-4">
+      <SheetContent side="right" className="w-[100vw] px-4 sm:max-w-none">
         <SheetHeader className="pt-3 ml-[-1px]">
           <SheetTitle>Tasvex</SheetTitle>
         </SheetHeader>
