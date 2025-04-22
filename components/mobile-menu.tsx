@@ -38,7 +38,7 @@ export function MobileMenu() {
         <div className="flex flex-col gap-4 mt-4 w-full">
           <Authenticated>
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <span className="text-sm font-medium">Project</span>
                 <ProjectSelector />
               </div>
