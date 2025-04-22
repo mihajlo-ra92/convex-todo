@@ -20,13 +20,27 @@ export const toggle = mutation({
   },
 });
 
+/**
+ * Create a new task within a group
+ */
 export const create = mutation({
-  args: { text: v.string() },
+  args: {
+    text: v.string(),
+    groupId: v.id("groups"),
+  },
   handler: async (ctx, args) => {
-    await ctx.db.insert("tasks", {
+    // Verify that the group exists
+    const group = await ctx.db.get(args.groupId);
+    if (!group) {
+      throw new Error("Group not found");
+    }
+
+    const taskId = await ctx.db.insert("tasks", {
       text: args.text,
       isCompleted: false,
+      groupId: args.groupId,
     });
+    return taskId;
   },
 });
 
@@ -36,5 +50,21 @@ export const remove = mutation({
     const task = await ctx.db.get(args.id);
     if (!task) throw new Error("Task not found");
     await ctx.db.delete(args.id);
+  },
+});
+
+/**
+ * List all tasks in a group
+ */
+export const list = query({
+  args: {
+    groupId: v.id("groups"),
+  },
+  handler: async (ctx, args) => {
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_group", (q) => q.eq("groupId", args.groupId))
+      .collect();
+    return tasks;
   },
 });

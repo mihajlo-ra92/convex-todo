@@ -32,7 +32,7 @@ export default function Home() {
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTaskText.trim() === "") return;
-    createTask({ text: newTaskText });
+    void createTask({ text: newTaskText });
     setNewTaskText("");
   };
 
