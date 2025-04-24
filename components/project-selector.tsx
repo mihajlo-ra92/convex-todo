@@ -14,23 +14,57 @@ import { ChevronDown } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CreateProjectDialog } from "./create-project-dialog";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export function ProjectSelector() {
   const projects = useQuery(api.projects.list);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
+
   const [selectedProject, setSelectedProject] = React.useState<{
     _id: string;
     name: string;
   } | null>(null);
 
-  // Set the first project as selected when projects load
+  // Update URL when selected project changes
+  const updateProjectInUrl = React.useCallback(
+    (project: { _id: string; name: string } | null) => {
+      const current = new URLSearchParams(Array.from(searchParams.entries()));
+
+      if (project) {
+        current.set("projectId", project._id);
+      } else {
+        current.delete("projectId");
+      }
+
+      const search = current.toString();
+      const query = search ? `?${search}` : "";
+      router.push(`${window.location.pathname}${query}`);
+    },
+    [router, searchParams]
+  );
+
+  // Set selected project based on URL param
   React.useEffect(() => {
-    if (projects && projects.length > 0 && !selectedProject) {
+    if (projects && projectId) {
+      const project = projects.find((p) => p?._id === projectId);
+      if (project) {
+        setSelectedProject(project);
+      }
+    }
+  }, [projects, projectId]);
+
+  // Set the first project as selected when projects load and no project is selected
+  React.useEffect(() => {
+    if (projects && projects.length > 0 && !selectedProject && !projectId) {
       const firstProject = projects.find((p) => p !== null);
       if (firstProject) {
         setSelectedProject(firstProject);
+        updateProjectInUrl(firstProject);
       }
     }
-  }, [projects, selectedProject]);
+  }, [projects, selectedProject, projectId, updateProjectInUrl]);
 
   if (!projects) {
     return (
@@ -67,7 +101,10 @@ export function ProjectSelector() {
           {validProjects.map((project) => (
             <DropdownMenuItem
               key={project._id}
-              onClick={() => setSelectedProject(project)}
+              onClick={() => {
+                setSelectedProject(project);
+                updateProjectInUrl(project);
+              }}
             >
               {project.name}
             </DropdownMenuItem>

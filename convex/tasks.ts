@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireGroupMember, requireTaskMember } from "./auth";
 
 export const get = query({
   args: {},
@@ -11,9 +12,7 @@ export const get = query({
 export const toggle = mutation({
   args: { id: v.id("tasks") },
   handler: async (ctx, args) => {
-    const task = await ctx.db.get(args.id);
-    if (!task) throw new Error("Task not found");
-
+    const task = await requireTaskMember(ctx, args.id);
     await ctx.db.patch(args.id, {
       isCompleted: !task.isCompleted,
     });
@@ -29,11 +28,7 @@ export const create = mutation({
     groupId: v.id("groups"),
   },
   handler: async (ctx, args) => {
-    // Verify that the group exists
-    const group = await ctx.db.get(args.groupId);
-    if (!group) {
-      throw new Error("Group not found");
-    }
+    await requireGroupMember(ctx, args.groupId);
 
     const taskId = await ctx.db.insert("tasks", {
       text: args.text,
@@ -47,24 +42,20 @@ export const create = mutation({
 export const remove = mutation({
   args: { id: v.id("tasks") },
   handler: async (ctx, args) => {
-    const task = await ctx.db.get(args.id);
-    if (!task) throw new Error("Task not found");
+    await requireTaskMember(ctx, args.id);
     await ctx.db.delete(args.id);
   },
 });
 
-/**
- * List all tasks in a group
- */
-export const list = query({
+export const edit = mutation({
   args: {
-    groupId: v.id("groups"),
+    id: v.id("tasks"),
+    text: v.string(),
   },
   handler: async (ctx, args) => {
-    const tasks = await ctx.db
-      .query("tasks")
-      .withIndex("by_group", (q) => q.eq("groupId", args.groupId))
-      .collect();
-    return tasks;
+    await requireTaskMember(ctx, args.id);
+    await ctx.db.patch(args.id, {
+      text: args.text,
+    });
   },
 });

@@ -25,19 +25,6 @@ export const create = mutation({
   },
 });
 
-// Example of checking if user is a member of a project
-// const projectMember = await ctx.db
-//   .query("projectMembers")
-//   .withIndex("by_project_and_user", (q) =>
-//     q.eq("projectId", projectId).eq("userId", userId)
-//   )
-//   .unique();
-// console.log("projectMember");
-// console.log(projectMember);
-// if (!projectMember) {
-//   throw new ConvexError("Unauthorized");
-// }
-
 /**
  * List all projects
  */
@@ -57,7 +44,5 @@ export const list = query({
     );
     const projects = await Promise.all(projectIds.map(ctx.db.get));
     return projects;
-    // const projects = await ctx.db.query("projects").collect();
-    // return projects;
   },
 });

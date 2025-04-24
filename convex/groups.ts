@@ -1,3 +1,4 @@
+import { requireProjectMember } from "./auth";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
@@ -11,11 +12,8 @@ export const create = mutation({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    // Verify that the project exists
-    const project = await ctx.db.get(args.projectId);
-    if (!project) {
-      throw new Error("Project not found");
-    }
+    // Verify project membership
+    await requireProjectMember(ctx, args.projectId);
 
     const groupId = await ctx.db.insert("groups", {
       name: args.name,
@@ -27,17 +25,55 @@ export const create = mutation({
 });
 
 /**
- * List all groups in a project
+ * List all groups in a project with their tasks
  */
-export const list = query({
+export const listWithTasks = query({
   args: {
     projectId: v.id("projects"),
   },
+  returns: v.array(
+    v.object({
+      _id: v.id("groups"),
+      _creationTime: v.number(),
+      name: v.string(),
+      description: v.optional(v.string()),
+      projectId: v.id("projects"),
+      tasks: v.array(
+        v.object({
+          _id: v.id("tasks"),
+          _creationTime: v.number(),
+          text: v.string(),
+          isCompleted: v.boolean(),
+          groupId: v.id("groups"),
+        })
+      ),
+    })
+  ),
   handler: async (ctx, args) => {
+    // Verify project membership
+    await requireProjectMember(ctx, args.projectId);
+
+    // First get all groups in the project
     const groups = await ctx.db
       .query("groups")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .collect();
-    return groups;
+
+    // For each group, fetch its tasks
+    const groupsWithTasks = await Promise.all(
+      groups.map(async (group) => {
+        const tasks = await ctx.db
+          .query("tasks")
+          .withIndex("by_group", (q) => q.eq("groupId", group._id))
+          .collect();
+
+        return {
+          ...group,
+          tasks,
+        };
+      })
+    );
+
+    return groupsWithTasks;
   },
 });
