@@ -35,11 +35,13 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
     <ScrollArea className="w-full whitespace-nowrap">
       <div className="flex w-max space-x-4 p-4">
         {groups.map((group) => (
-          <Card key={group._id} className="w-[350px] shrink-0">
+          <Card key={group._id} className="w-[280px] sm:w-[350px] shrink-0">
             <div className="p-4">
-              <h3 className="font-semibold tracking-tight">{group.name}</h3>
+              <h3 className="font-semibold tracking-tight break-words">
+                {group.name}
+              </h3>
               {group.description && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground break-words">
                   {group.description}
                 </p>
               )}
@@ -54,12 +56,12 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
                   >
                     <Checkbox
                       checked={task.isCompleted}
-                      className="h-5 w-5"
+                      className="h-5 w-5 shrink-0"
                       onCheckedChange={() => toggle({ id: task._id })}
                     />
                     <p
                       className={cn(
-                        "text-sm flex-1",
+                        "text-sm flex-1 break-words",
                         task.isCompleted && "text-muted-foreground line-through"
                       )}
                     >
