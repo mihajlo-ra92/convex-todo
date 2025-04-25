@@ -1,9 +1,9 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { TaskBoard } from "./components/TaskBoard";
 import { Id } from "@/convex/_generated/dataModel";
 import { Authenticated } from "convex/react";
+import { TaskBoard } from "@/components/TaskBoard";
 
 export default function Home() {
   const searchParams = useSearchParams();

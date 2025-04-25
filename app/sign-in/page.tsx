@@ -23,7 +23,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 const formSchema = z.object({
   email: z.string().email({
@@ -36,7 +35,6 @@ const formSchema = z.object({
 
 export default function SignIn() {
   const { signIn } = useAuthActions();
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,7 +52,7 @@ export default function SignIn() {
       formData.append("password", values.password);
       formData.append("flow", "signIn");
       await signIn("password", formData);
-      router.push("/");
+      window.location.href = "/";
     } catch (error) {
       if (error instanceof Error) {
         if (
@@ -99,23 +97,33 @@ export default function SignIn() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Enter your password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex flex-col gap-2">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Enter your password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end">
+                  <Link
+                    href="/reset"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+              </div>
               <Button type="submit" className="w-full">
                 Sign in
               </Button>
