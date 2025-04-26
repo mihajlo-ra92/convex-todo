@@ -63,7 +63,7 @@ export function SignUpForm() {
       formData.append("flow", "signUp");
 
       await signIn("password", formData);
-      router.push("/");
+      router.push(`/verify?email=${encodeURIComponent(values.email)}`);
     } catch (e) {
       if (e instanceof Error) {
         const errorMessage =

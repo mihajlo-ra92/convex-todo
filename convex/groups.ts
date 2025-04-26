@@ -77,3 +77,32 @@ export const listWithTasks = query({
     return groupsWithTasks;
   },
 });
+
+/**
+ * Delete a group and all its tasks
+ */
+export const remove = mutation({
+  args: {
+    groupId: v.id("groups"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    // Ensure the user is a member of the project that owns the group
+    const group = await ctx.db.get(args.groupId);
+    if (!group) throw new Error("Group not found");
+    await requireProjectMember(ctx, group.projectId);
+
+    // Delete all tasks in the group
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_group", (q) => q.eq("groupId", args.groupId))
+      .collect();
+    for (const task of tasks) {
+      await ctx.db.delete(task._id);
+    }
+
+    // Delete the group itself
+    await ctx.db.delete(args.groupId);
+    return null;
+  },
+});

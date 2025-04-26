@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as ResendOTP from "../ResendOTP.js";
 import type * as ResendOTPPasswordReset from "../ResendOTPPasswordReset.js";
 import type * as auth from "../auth.js";
 import type * as groups from "../groups.js";
@@ -29,6 +30,7 @@ import type * as tasks from "../tasks.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  ResendOTP: typeof ResendOTP;
   ResendOTPPasswordReset: typeof ResendOTPPasswordReset;
   auth: typeof auth;
   groups: typeof groups;

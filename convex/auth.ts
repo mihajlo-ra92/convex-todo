@@ -1,13 +1,17 @@
 import { convexAuth } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { QueryCtx, MutationCtx } from "./_generated/server";
+import { QueryCtx, MutationCtx, query } from "./_generated/server";
 import { ConvexError } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { ResendOTPPasswordReset } from "./ResendOTPPasswordReset";
-
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-  providers: [Password({ reset: ResendOTPPasswordReset })],
+  providers: [
+    Password({ reset: ResendOTPPasswordReset }),
+    // TODO: Uncomment when we have email domain setup
+    // Password({ reset: ResendOTPPasswordReset, verify: ResendOTP }),
+    // ResendOTP,
+  ],
 });
 
 /**
@@ -16,9 +20,18 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
  */
 export async function requireAuth(ctx: QueryCtx | MutationCtx) {
   const userId = await getAuthUserId(ctx);
+
   if (!userId) {
     throw new ConvexError("Unauthenticated");
   }
+  const user = await ctx.db.get(userId);
+  if (!user) {
+    throw new ConvexError("Unauthenticated");
+  }
+  // TODO: Uncomment when we have email domain setup
+  // if (!user.emailVerificationTime) {
+  //   throw new ConvexError("Email not verified");
+  // }
   return userId;
 }
 
@@ -29,7 +42,8 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
  */
 export async function requireProjectMember(
   ctx: QueryCtx | MutationCtx,
-  projectId: Id<"projects">
+  projectId: Id<"projects">,
+  ownerOnly: boolean = false
 ) {
   const userId = await requireAuth(ctx);
 
@@ -42,6 +56,10 @@ export async function requireProjectMember(
 
   if (!projectMember) {
     throw new ConvexError("Unauthorized - Not a project member");
+  }
+
+  if (ownerOnly && projectMember.role !== "owner") {
+    throw new ConvexError("Unauthorized - Not an owner");
   }
 
   return projectMember;
@@ -92,3 +110,26 @@ export async function requireGroupMember(
   await requireProjectMember(ctx, project._id);
   return group;
 }
+
+export const getUser = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      throw new ConvexError("Unauthenticated");
+    }
+    const user = await ctx.db.get(userId);
+    return user;
+  },
+});
+
+export const getUserByEmail = async (ctx: QueryCtx, email: string) => {
+  const user = await ctx.db
+    .query("users")
+    .withIndex("email", (q) => q.eq("email", email))
+    .unique();
+  if (!user) {
+    throw new ConvexError("User not found");
+  }
+  return user;
+};

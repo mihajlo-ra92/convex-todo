@@ -10,11 +10,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Settings } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CreateProjectDialog } from "./create-project-dialog";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ProjectSettingsDialog } from "./project-settings-dialog";
 
 export function ProjectSelector() {
   const projects = useQuery(api.projects.list);
@@ -50,7 +51,10 @@ export function ProjectSelector() {
     if (projects && projectId) {
       const project = projects.find((p) => p?._id === projectId);
       if (project) {
-        setSelectedProject(project);
+        setSelectedProject({
+          _id: project._id as string,
+          name: project.name as string,
+        });
       }
     }
   }, [projects, projectId]);
@@ -60,8 +64,14 @@ export function ProjectSelector() {
     if (projects && projects.length > 0 && !selectedProject && !projectId) {
       const firstProject = projects.find((p) => p !== null);
       if (firstProject) {
-        setSelectedProject(firstProject);
-        updateProjectInUrl(firstProject);
+        setSelectedProject({
+          _id: firstProject._id as string,
+          name: firstProject.name as string,
+        });
+        updateProjectInUrl({
+          _id: firstProject._id as string,
+          name: firstProject.name as string,
+        });
       }
     }
   }, [projects, selectedProject, projectId, updateProjectInUrl]);
@@ -98,16 +108,47 @@ export function ProjectSelector() {
         <DropdownMenuContent className="w-[200px]">
           <DropdownMenuLabel>Projects</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {validProjects.map((project) => (
-            <DropdownMenuItem
+          {validProjects.map(({ role, ...project }) => (
+            <div
               key={project._id}
-              onClick={() => {
-                setSelectedProject(project);
-                updateProjectInUrl(project);
-              }}
+              className="flex items-center justify-between"
             >
-              {project.name}
-            </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setSelectedProject({
+                    _id: project._id as string,
+                    name: project.name as string,
+                  });
+                  updateProjectInUrl({
+                    _id: project._id as string,
+                    name: project.name as string,
+                  });
+                }}
+                className="flex-1"
+              >
+                {project.name}
+              </DropdownMenuItem>
+              {role === "owner" && (
+                <ProjectSettingsDialog
+                  project={{
+                    _id: project._id as string,
+                    name: project.name as string,
+                    description: project.description as string,
+                  }}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="ml-2"
+                    onClick={(e) => e.stopPropagation()}
+                    tabIndex={-1}
+                    aria-label={`Open settings for ${project.name}`}
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </ProjectSettingsDialog>
+              )}
+            </div>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
