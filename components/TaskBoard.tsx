@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Pencil, Trash, Plus } from "lucide-react";
+import { MoreVertical, Trash, Plus } from "lucide-react";
 import { DeleteTaskDialog } from "@/components/delete-task-dialog";
 import { CreateTask } from "./CreateTask";
 import { CreateGroupDialog } from "./CreateGroupDialog";
